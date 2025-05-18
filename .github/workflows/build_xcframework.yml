@@ -13,7 +13,7 @@ jobs:
     env:
       FRAMEWORK_NAME: GithubActionTest # Replace with your framework's name
       PROJECT_PATH: GithubActionTest.xcodeproj # Or YourWorkspace.xcworkspace if using a workspace
-      SCHEME_NAME: Debug # The scheme that builds your framework (ensure this scheme is configured for 'Release' configuration archiving)
+      SCHEME_NAME: GithubActionTest # The scheme that builds your framework (ensure this scheme is configured for 'Release' configuration archiving)
 
     steps:
       - name: Checkout code
