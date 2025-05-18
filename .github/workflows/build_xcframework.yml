@@ -132,4 +132,4 @@ jobs:
           files: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
           generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Necessary for creating releases
+          GITHUB_TOKEN: ${{ secrets.PAT }} # Necessary for creating releases
