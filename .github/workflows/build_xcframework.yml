@@ -1,0 +1,106 @@
+name: Build XCFramework
+
+on:
+  push:
+    tags:        # Trigger the workflow when a new tag is pushed (e.g., v1.0.0)
+      - 'v*'     # Matches tags like v1.0, v2.3.4
+
+jobs:
+  build:
+    name: Build and Create XCFramework
+    runs-on: macos-latest # Use the latest macOS runner
+
+    env:
+      FRAMEWORK_NAME: GithubActionTest # Replace with your framework's name
+      PROJECT_PATH: GithubActionTest.xcodeproj # Or YourWorkspace.xcworkspace if using a workspace
+      SCHEME_NAME: Debug # The scheme that builds your framework (ensure this scheme is configured for 'Release' configuration archiving)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        # run: |
+         # sudo xcode-select -s /Applications/Xcode_$(xcodebuild -version | grep Xcode | cut -d' ' -f2).app
+          # echo "Using Xcode version: $(xcodebuild -version | grep Xcode | cut -d' ' -f2)"
+        # Or specify a version:
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app # Example for Xcode 16.3
+
+      # Check for Podfile first
+      - name: Check for Podfile
+        id: file_exists
+        uses: andstor/file-existence-action@v3 # Using v3, v2 is also fine
+        with:
+          files: "Podfile" # This will create an output named 'podfile' (lowercase)
+
+      # Optional: If you use CocoaPods
+      - name: Install CocoaPods
+        if: steps.file_exists.outputs.podfile == 'true' # Check for 'podfile' output
+        run: gem install cocoapods
+
+      - name: Install dependencies (CocoaPods)
+        if: steps.file_exists.outputs.podfile == 'true' # Check for 'podfile' output
+        run: pod install --repo-update
+
+      # Archive for iOS Devices
+      - name: Archive for iOS
+        run: |
+          xcodebuild archive \
+            -project "${{ env.PROJECT_PATH }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "archives/${{ env.FRAMEWORK_NAME }}-iOS" \
+            BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
+            SKIP_INSTALL=NO
+        # If using a workspace, change -project to -workspace, e.g.:
+        #   -workspace "${{ env.PROJECT_PATH }}" \
+
+      # Archive for iOS Simulator
+      - name: Archive for iOS Simulator
+        run: |
+          xcodebuild archive \
+            -project "${{ env.PROJECT_PATH }}" \
+            -scheme "${{ env.SCHEME_NAME }}" \
+            -configuration Release \
+            -destination "generic/platform=iOS Simulator" \
+            -archivePath "archives/${{ env.FRAMEWORK_NAME }}-iOS-Simulator" \
+            BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
+            SKIP_INSTALL=NO
+        # If using a workspace, change -project to -workspace
+
+      # Create XCFramework
+      - name: Create XCFramework
+        run: |
+          xcodebuild -create-xcframework \
+            -framework "archives/${{ env.FRAMEWORK_NAME }}-iOS.xcarchive/Products/Library/Frameworks/${{ env.FRAMEWORK_NAME }}.framework" \
+            -framework "archives/${{ env.FRAMEWORK_NAME }}-iOS-Simulator.xcarchive/Products/Library/Frameworks/${{ env.FRAMEWORK_NAME }}.framework" \
+            -output "${{ env.FRAMEWORK_NAME }}.xcframework"
+
+      # Optional: Zip the XCFramework
+      - name: Zip XCFramework
+        run: zip -r "${{ env.FRAMEWORK_NAME }}.xcframework.zip" "${{ env.FRAMEWORK_NAME }}.xcframework"
+
+      # Upload XCFramework as an artifact
+      - name: Upload XCFramework Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FRAMEWORK_NAME }}.xcframework
+          path: ${{ env.FRAMEWORK_NAME }}.xcframework
+
+      # Optional: Upload Zipped XCFramework as an artifact (useful for releases)
+      - name: Upload Zipped XCFramework Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
+          path: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
+
+      # Optional: Create a GitHub Release and upload the zipped XCFramework
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2 # Updated to v2, v1 is also an option
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Necessary for creating releases
