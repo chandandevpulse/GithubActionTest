@@ -122,7 +122,7 @@ jobs:
             s.description      = <<-DESC
             TODO: Add long description of the pod here.
                             DESC
-            s.homepage         = 'https://github.com/YOUR_USERNAME/YOUR_REPO'
+            s.homepage         = 'https://github.com/chandandevpulse/GithubActionTest'
             s.license          = { :type => 'MIT', :file => 'LICENSE' }
             s.author           = { 'Your Name' => 'chandan.kumar@devpulse.in' }
             s.source           = { :http => 'https://github.com/chandandevpulse/GithubActionTest/releases/download/${GITHUB_REF#refs/tags/}/${{ env.FRAMEWORK_NAME }}.xcframework.zip' }
@@ -169,6 +169,6 @@ jobs:
           
       # Validate Podspec
       - name: Validate Podspec
-        run: pod spec lint "${{ env.PODSPEC_FILE }}" --allow-warning
+        run: pod spec lint "${{ env.PODSPEC_FILE }}" --allow-warnings
 
 
