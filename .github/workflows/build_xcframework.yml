@@ -156,15 +156,6 @@ jobs:
         if: always()
         run: |
           security delete-keychain "$KEYCHAIN_NAME" || echo "Failed to delete keychain, it might not exist."
-        
-      # Push to CocoaPods Trunk (optional)
-      - name: Push to CocoaPods Trunk
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          gem install cocoapods
-          pod trunk push "${{ env.PODSPEC_FILE }}" --allow-warnings
-        env:
-          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
           
       # Optional: Create a GitHub Release and upload the zipped XCFramework
       - name: Create GitHub Release
@@ -177,6 +168,15 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }} # Necessary for creating releases
+          
+      # Push to CocoaPods Trunk (optional)
+      - name: Push to CocoaPods Trunk
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          gem install cocoapods
+          pod trunk push "${{ env.PODSPEC_FILE }}" --allow-warnings
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
           
       # Validate Podspec
       - name: Validate Podspec
