@@ -117,8 +117,8 @@ jobs:
           cat <<EOF > "${{ env.PODSPEC_FILE }}"
           Pod::Spec.new do |s|
             s.name             = '${{ env.FRAMEWORK_NAME }}'
-            s.version          = '$(echo ${GITHUB_REF#refs/tags/})'
-            s.summary          = 'A short description of ${{ env.FRAMEWORK_NAME }}.'
+            s.version          = '$(echo ${GITHUB_REF#refs/tags/v})' 
+            s.summary          = 'A short description of GithubActionTest'
             s.description      = <<-DESC
             TODO: Add long description of the pod here.
                             DESC
