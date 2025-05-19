@@ -18,7 +18,7 @@ jobs:
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }} #Development certificate password
       KEYCHAIN_NAME: "Apple Development: Chandan Kumar (47QN7N8VZL)" #Keychain name
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }} #keychain password
-      PODSPEC_FILE: "${{ env.FRAMEWORK_NAME }}.podspec" # Podspec file name
+      PODSPEC_FILE: GithubActionTest.podspec # Podspec file name
 
     steps:
       - name: Checkout code
