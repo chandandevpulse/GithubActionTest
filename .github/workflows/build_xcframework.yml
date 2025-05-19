@@ -114,10 +114,11 @@ jobs:
       # Generate Podspec file
       - name: Generate Podspec File
         run: |
+          VERSION=$(echo ${GITHUB_REF#refs/tags/v})
           cat <<EOF > "${{ env.PODSPEC_FILE }}"
           Pod::Spec.new do |s|
             s.name             = '${{ env.FRAMEWORK_NAME }}'
-            s.version          = '$(echo ${GITHUB_REF#refs/tags/v})' 
+            s.version          = '$VERSION' 
             s.summary          = 'A short description of GithubActionTest'
             s.description      = <<-DESC
             TODO: Add long description of the pod here.
@@ -125,7 +126,7 @@ jobs:
             s.homepage         = 'https://github.com/chandandevpulse/GithubActionTest'
             s.license          = { :type => 'MIT', :file => 'LICENSE' }
             s.author           = { 'Your Name' => 'chandan.kumar@devpulse.in' }
-            s.source           = { :http => 'https://github.com/chandandevpulse/GithubActionTest/releases/download/${GITHUB_REF#refs/tags/}/${{ env.FRAMEWORK_NAME }}.xcframework.zip' }
+            s.source           = { :http => 'https://github.com/chandandevpulse/GithubActionTest/releases/download/v$VERSION/${{ env.FRAMEWORK_NAME }}.xcframework.zip' }
             s.ios.deployment_target = '16.0'
             s.vendored_frameworks = '${{ env.FRAMEWORK_NAME }}.xcframework'
           end
