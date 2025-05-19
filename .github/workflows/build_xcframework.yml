@@ -18,6 +18,7 @@ jobs:
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }} #Development certificate password
       KEYCHAIN_NAME: "Apple Development: Chandan Kumar (47QN7N8VZL)" #Keychain name
       KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }} #keychain password
+      PODSPEC_FILE: "${{ env.FRAMEWORK_NAME }}.podspec" # Podspec file name
 
     steps:
       - name: Checkout code
@@ -109,6 +110,30 @@ jobs:
       # Optional: Zip the XCFramework
       - name: Zip XCFramework
         run: zip -r "${{ env.FRAMEWORK_NAME }}.xcframework.zip" "${{ env.FRAMEWORK_NAME }}.xcframework"
+        
+      # Generate Podspec file
+      - name: Generate Podspec File
+        run: |
+          cat <<EOF > "${{ env.PODSPEC_FILE }}"
+          Pod::Spec.new do |s|
+            s.name             = '${{ env.FRAMEWORK_NAME }}'
+            s.version          = '$(echo ${GITHUB_REF#refs/tags/})'
+            s.summary          = 'A short description of ${{ env.FRAMEWORK_NAME }}.'
+            s.description      = <<-DESC
+            TODO: Add long description of the pod here.
+                            DESC
+            s.homepage         = 'https://github.com/YOUR_USERNAME/YOUR_REPO'
+            s.license          = { :type => 'MIT', :file => 'LICENSE' }
+            s.author           = { 'Your Name' => 'chandan.kumar@devpulse.in' }
+            s.source           = { :http => 'https://github.com/chandandevpulse/GithubActionTest/releases/download/${GITHUB_REF#refs/tags/}/${{ env.FRAMEWORK_NAME }}.xcframework.zip' }
+            s.ios.deployment_target = '16.0'
+            s.vendored_frameworks = '${{ env.FRAMEWORK_NAME }}.xcframework'
+          end
+          EOF
+
+      # Validate Podspec
+      - name: Validate Podspec
+        run: pod spec lint "${{ env.PODSPEC_FILE }}"
 
       # Upload XCFramework as an artifact
       - name: Upload XCFramework Artifact
@@ -123,6 +148,12 @@ jobs:
         with:
           name: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
           path: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
+          
+      - name: Upload Podspec Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PODSPEC_FILE }}
+          path: ${{ env.PODSPEC_FILE }}
 
       # Optional: Create a GitHub Release and upload the zipped XCFramework
       - name: Create GitHub Release
@@ -133,3 +164,11 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }} # Necessary for creating releases
+          
+      # This step will run even if previous steps fail, to ensure keychain cleanup
+      - name: Cleanup Temporary Keychain
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_NAME" || echo "Failed to delete keychain, it might not exist."
+
+
