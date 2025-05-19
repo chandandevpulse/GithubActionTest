@@ -131,10 +131,6 @@ jobs:
           end
           EOF
 
-      # Validate Podspec
-      - name: Validate Podspec
-        run: pod spec lint "${{ env.PODSPEC_FILE }}"
-
       # Upload XCFramework as an artifact
       - name: Upload XCFramework Artifact
         uses: actions/upload-artifact@v4
@@ -154,6 +150,10 @@ jobs:
         with:
           name: ${{ env.PODSPEC_FILE }}
           path: ${{ env.PODSPEC_FILE }}
+          
+      # Validate Podspec
+      - name: Validate Podspec
+        run: pod spec lint "${{ env.PODSPEC_FILE }}"
 
       # Optional: Create a GitHub Release and upload the zipped XCFramework
       - name: Create GitHub Release
