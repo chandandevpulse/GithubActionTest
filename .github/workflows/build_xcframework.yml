@@ -150,26 +150,12 @@ jobs:
         with:
           name: ${{ env.PODSPEC_FILE }}
           path: ${{ env.PODSPEC_FILE }}
-
-      # Optional: Create a GitHub Release and upload the zipped XCFramework
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2 # Updated to v2, v1 is also an option
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: ${{ env.FRAMEWORK_NAME }}.xcframework.zip
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }} # Necessary for creating releases
           
       # This step will run even if previous steps fail, to ensure keychain cleanup
       - name: Cleanup Temporary Keychain
         if: always()
         run: |
           security delete-keychain "$KEYCHAIN_NAME" || echo "Failed to delete keychain, it might not exist."
-          
-      # Validate Podspec
-      - name: Validate Podspec
-        run: pod spec lint "${{ env.PODSPEC_FILE }}" --allow-warnings
         
       # Push to CocoaPods Trunk (optional)
       - name: Push to CocoaPods Trunk
@@ -179,5 +165,21 @@ jobs:
           pod trunk push "${{ env.PODSPEC_FILE }}" --allow-warnings
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          
+      # Optional: Create a GitHub Release and upload the zipped XCFramework
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2 # Updated to v2, v1 is also an option
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            ${{ env.FRAMEWORK_NAME }}.xcframework.zip
+            ${{ env.PODSPEC_FILE }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }} # Necessary for creating releases
+          
+      # Validate Podspec
+      - name: Validate Podspec
+        run: pod spec lint "${{ env.PODSPEC_FILE }}" --allow-warnings
 
 
