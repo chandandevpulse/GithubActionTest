@@ -150,10 +150,6 @@ jobs:
         with:
           name: ${{ env.PODSPEC_FILE }}
           path: ${{ env.PODSPEC_FILE }}
-          
-      # Validate Podspec
-      - name: Validate Podspec
-        run: pod spec lint "${{ env.PODSPEC_FILE }}"
 
       # Optional: Create a GitHub Release and upload the zipped XCFramework
       - name: Create GitHub Release
@@ -170,5 +166,9 @@ jobs:
         if: always()
         run: |
           security delete-keychain "$KEYCHAIN_NAME" || echo "Failed to delete keychain, it might not exist."
+          
+      # Validate Podspec
+      - name: Validate Podspec
+        run: pod spec lint "${{ env.PODSPEC_FILE }}"
 
 
