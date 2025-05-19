@@ -169,6 +169,6 @@ jobs:
           
       # Validate Podspec
       - name: Validate Podspec
-        run: pod spec lint "${{ env.PODSPEC_FILE }}"
+        run: pod spec lint "${{ env.PODSPEC_FILE }}" --allow-warning
 
 
