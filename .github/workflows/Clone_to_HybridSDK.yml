@@ -60,4 +60,4 @@ jobs:
 
       - name: Clean up temporary HybridSDK folder
         run: rm -rf temp_hybrid_sdk
-        working-directory: ${{ github.workspace }} # Ensure we are in the root of GithubActionTest repo
+        working-directory: ${{ github.workspace }} # Ensure we are in the root of GithubActionTest repo. check once
