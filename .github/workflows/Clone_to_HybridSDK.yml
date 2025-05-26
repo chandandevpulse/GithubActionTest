@@ -19,7 +19,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
-      - name: Clone HybridSDK (using HTTPS with PAT)
+      - name: Clone HybridSDK (using HTTPS with PAT) and Copy Content
         run: |
           # Clone HybridSDK to a temporary directory using the PAT for authentication
           git clone https://x-access-token:${{ secrets.PAT }}@github.com/chandandevpulse/HybridSDK.git temp_hybrid_sdk
@@ -28,34 +28,36 @@ jobs:
           cd temp_hybrid_sdk
 
           # Checkout the develop branch. Create if it doesn't exist.
-          # We need to make sure we are on the branch where we want to push changes.
-          # If the branch doesn't exist, 'checkout -b' creates it.
           git checkout develop || git checkout -b develop
 
-          # Remove existing Frameworks directory to ensure a clean clone
-          # This ensures that old files are removed if they are no longer present in GithubActionTest
-          rm -rf Frameworks
+          # --- START: Changes for new folder structure ---
 
-          # Create the Frameworks directory if it doesn't exist
-          mkdir -p Frameworks
+          # Remove existing Frameworks/GithubActionTest directory to ensure a clean clone
+          # This ensures that old files in this specific path are removed
+          rm -rf Frameworks/GithubActionTest
 
-          # Copy contents from GithubActionTest into Frameworks
-          # Use `rsync` for efficient copying and to ignore .git and .github directories from the source
-          rsync -av --exclude '.git' --exclude '.github' ../. Frameworks/
+          # Create the nested directory structure: Frameworks/GithubActionTest
+          # -p flag ensures parent directories are created if they don't exist
+          mkdir -p Frameworks/GithubActionTest
+
+          # Copy contents from GithubActionTest into Frameworks/GithubActionTest
+          # '../.' refers to the root of the GithubActionTest repo.
+          # We copy its contents directly into the newly created target folder.
+          rsync -av --exclude '.git' --exclude '.github' ../. Frameworks/GithubActionTest/
+
+          # --- END: Changes for new folder structure ---
 
           # Add changes
+          # We add the Frameworks folder to stage all changes within it
           git add Frameworks
 
-          # Commit changes if there are any.
-          # The `git diff --quiet --exit-code --cached` command checks if there are any staged changes.
-          # If there are changes (exit code 1), then the `||` operator executes the `git commit` command.
-          git diff --quiet --exit-code --cached || git commit -m "Automated: Clone GithubActionTest tag ${{ github.ref_name }} to Frameworks"
+          # Commit changes if there are any
+          git diff --quiet --exit-code --cached || git commit -m "Automated: Clone GithubActionTest tag ${{ github.ref_name }} into Frameworks/GithubActionTest"
 
           # Push to the develop branch of HybridSDK
-          # The PAT is already embedded in the remote URL from the clone step, so a simple push works.
           git push origin develop
         working-directory: ${{ github.workspace }}
-        
+
       - name: Clean up temporary HybridSDK folder
         run: rm -rf temp_hybrid_sdk
         working-directory: ${{ github.workspace }} # Ensure we are in the root of GithubActionTest repo
