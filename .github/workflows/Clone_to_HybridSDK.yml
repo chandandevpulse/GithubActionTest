@@ -1,0 +1,57 @@
+name: Clone to HybridSDK
+
+on:
+  push:
+    tags:
+      - '*' # This workflow will trigger on any tag push
+
+jobs:
+  clone_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GithubActionTest repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for tags
+
+      - name: Configure Git User
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Clone HybridSDK (using HTTPS with PAT)
+        run: |
+          # Clone HybridSDK to a temporary directory using the PAT for authentication
+          git clone https://x-access-token:${{ secrets.PAT }}@github.com/chandandevpulse/HybridSDK.git temp_hybrid_sdk
+
+          # Change to the HybridSDK repository directory
+          cd temp_hybrid_sdk
+
+          # Checkout the develop branch. Create if it doesn't exist.
+          # We need to make sure we are on the branch where we want to push changes.
+          # If the branch doesn't exist, 'checkout -b' creates it.
+          git checkout develop || git checkout -b develop
+
+          # Remove existing Frameworks directory to ensure a clean clone
+          # This ensures that old files are removed if they are no longer present in GithubActionTest
+          rm -rf Frameworks
+
+          # Create the Frameworks directory if it doesn't exist
+          mkdir -p Frameworks
+
+          # Copy contents from GithubActionTest into Frameworks
+          # Use `rsync` for efficient copying and to ignore .git and .github directories from the source
+          rsync -av --exclude '.git' --exclude '.github' ../. Frameworks/
+
+          # Add changes
+          git add Frameworks
+
+          # Commit changes if there are any.
+          # The `git diff --quiet --exit-code --cached` command checks if there are any staged changes.
+          # If there are changes (exit code 1), then the `||` operator executes the `git commit` command.
+          git diff --quiet --exit-code --cached || git commit -m "Automated: Clone GithubActionTest tag ${{ github.ref_name }} to Frameworks"
+
+          # Push to the develop branch of HybridSDK
+          # The PAT is already embedded in the remote URL from the clone step, so a simple push works.
+          git push origin develop
+        working-directory: ${{ github.workspace }}
